@@ -10,6 +10,31 @@
 #include <sys/wait.h>
 #include <dirent.h>
 
+// Structure to hold file information
+typedef struct {
+    char path[256];
+    char type[16];
+    char name[16];
+    int size;
+} file_info_t;
+
+// Structure to hold duplicate file information
+typedef struct {
+    char path[256];
+    char type[16];
+} duplicate_file_t;
+
+// Global variables
+sem_t sem; // semaphore for synchronization
+int k=0;
+int t=1;
+int number_of_files=1;
+int num_checked_files = 1;
+int num_deleted_files = 0;
+int number_of_txt_files = 0;
+file_info_t file_list[10]; // list of all checked files
+duplicate_file_t duplicate_list[10]; // list of duplicate files
+
 int main() {
     const char *root_path = "/home/alireza/Desktop/test_project";
     // Initialize semaphore
