@@ -10,5 +10,5 @@ int main() {
     for(int j = 0 ;j<num_deleted_files;j++){
         printf("- %s\n",duplicate_list[j].path);
     }
-    // TODO: implement
+    
 }
