@@ -1,3 +1,15 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <sys/mman.h>
+#include <sys/wait.h>
+#include <dirent.h>
+
 int main() {
     const char *root_path = "/home/alireza/Desktop/test_project";
     // Initialize semaphore
