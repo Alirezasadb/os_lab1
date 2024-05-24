@@ -35,6 +35,113 @@ int number_of_txt_files = 0;
 file_info_t file_list[10]; // list of all checked files
 duplicate_file_t duplicate_list[10]; // list of duplicate files
 
+
+
+// Function to check if two files are identical
+int are_files_identical(const char *file1, const char *file2) {
+    FILE *fp1 = fopen(file1, "rb");
+    FILE *fp2 = fopen(file2, "rb");
+    /*if (!fp1 ||!fp2) return 0;
+    char buf1[1024], buf2[1024];
+    while (fread(buf1, 1, 1024, fp1) == 1024 && fread(buf2, 1, 1024, fp2) == 1024) {
+
+if (memcmp(buf1, buf2, 1024)!= 0) break;
+    }
+    fclose(fp1);
+    fclose(fp2);
+    return feof(fp1) && feof(fp2);*/
+    int ch1 ,ch2;
+    do{
+    ch1=fgetc(fp1);
+    ch2=fgetc(fp2);
+    if(ch1 != ch2){
+        fclose(fp1);
+        fclose(fp2);
+        return 0;
+    }
+    }while(ch1 != EOF && ch2 != EOF);
+    fclose(fp1);
+    fclose(fp2);
+    if(ch1 == EOF && ch2== EOF){
+        return 1;
+    }else{
+        return 0;
+    }
+}
+
+// Thread function to check a file
+void *check_file(void *arg) {
+    file_info_t *file = (file_info_t *)arg;
+    sem_wait(&sem);
+    //printf("%s\n",file->type);
+    //char *txt=file->path;
+    number_of_files++;
+    //printf("%s\n",file_list[0].path);
+    // Check if file is duplicate
+        if(file->type[0]=='t'){
+            number_txt++;
+            num_txt_array++;
+            if(num_txt_array==1){
+                file_list_txt[0]= *file;
+            }
+            for(int i=0;i<num_txt_array-1;i++){
+                if (are_files_identical(file->path, file_list_txt[i].path)) {
+                    num_txt_array--;
+                    remove(file->path);
+                    duplicate_file_t duplicate;
+                    strcpy(duplicate.path, file->path);
+                    strcpy(duplicate.type, file->type);
+                    duplicate_list[num_deleted_files++] = duplicate;
+                    break;
+                }else{
+                    file_list_txt[num_txt_array-1]= *file;
+                }
+            }
+        }else if(file->type[0]=='j'){
+            number_jpg++;
+            num_jpg_array++;
+            if(num_jpg_array==1){
+                file_list_jpg[0]= *file;
+            }
+            for(int i=0;i<num_jpg_array-1;i++){
+                if (compare_jpg_files(file->path, file_list_jpg[i].path)) {
+                    num_jpg_array--;
+                    remove(file->path);
+                    duplicate_file_t duplicate;
+                    strcpy(duplicate.path, file->path);
+                    strcpy(duplicate.type, file->type);
+                    duplicate_list[num_deleted_files++] = duplicate;
+                    break;
+                }else{
+                    file_list_txt[num_jpg_array-1]= *file;
+                }
+            }
+
+        }else if(file->type[0]=='p'){
+            number_pdf++;
+            num_pdf_array++;
+            if(num_pdf_array==1){
+                file_list_pdf[0]= *file;
+            }
+            for(int i=0;i<num_pdf_array-1;i++){
+                if (arePdfFilesIdentical(file->path, file_list_pdf[i].path)) {
+                    num_pdf_array--;
+                    remove(file->path);
+                    duplicate_file_t duplicate;
+                    strcpy(duplicate.path, file->path);
+                    strcpy(duplicate.type, file->type);
+                    duplicate_list[num_deleted_files++] = duplicate;
+                    break;
+                }else{
+                    file_list_pdf[num_pdf_array-1]= *file;
+                }
+            }
+        }
+    sem_post(&sem);
+    return NULL;
+}
+
+
 void create_process(const char *path) {
     pid_t pid = vfork();
     if (pid == 0) { // child process
