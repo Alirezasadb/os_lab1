@@ -1,1 +1,1 @@
-# os_lab1
+# Operating Systems first project
