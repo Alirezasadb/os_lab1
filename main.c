@@ -35,6 +35,21 @@ int number_of_txt_files = 0;
 file_info_t file_list[10]; // list of all checked files
 duplicate_file_t duplicate_list[10]; // list of duplicate files
 
+void traverse_directory(const char *root_path){
+    DIR *dir;
+    struct dirent *ent;
+    dir = opendir(root_path);
+    while ((ent = readdir(dir))!= NULL) {
+        if (ent->d_type == DT_DIR && strcmp(ent->d_name, ".")!= 0 && strcmp(ent->d_name, "..")!= 0) {
+            char subfolder_path[256];
+            sprintf(subfolder_path, "%s/%s", root_path, ent->d_name);
+            create_process(subfolder_path);
+            traverse_directory(subfolder_path);
+        }
+    }
+    closedir(dir);
+}
+
 int main() {
     const char *root_path = "/home/alireza/Desktop/test_project";
     // Initialize semaphore
