@@ -35,6 +35,52 @@ int number_of_txt_files = 0;
 file_info_t file_list[10]; // list of all checked files
 duplicate_file_t duplicate_list[10]; // list of duplicate files
 
+void create_process(const char *path) {
+    pid_t pid = vfork();
+    if (pid == 0) { // child process
+        // Create a thread for each file in the folder
+        DIR *dir;
+        struct dirent *ent;
+        dir = opendir(path);
+        while ((ent = readdir(dir))!= NULL) {
+            if (ent->d_type == DT_REG) { // regular file
+                file_info_t file;
+                sprintf(file.path, "%s/%s", path, ent->d_name);
+                sprintf(file.name, "%s", ent->d_name);
+                char *result1=strstr(file.path,"txt");
+                char *result2=strstr(file.path,"jpg");
+                char *result3=strstr(file.path,"pdf");
+               if(result1!=NULL){
+                        sprintf(file.type, "txt");
+                    }else if(result2!=NULL){
+                        sprintf(file.type, "jpg");
+                    }else{
+                        sprintf(file.type, "pdf");
+                }
+                /*if(k==0){
+                    k=1;
+                    if(result1!=NULL){
+                        file_list_txt[0]=file;
+                        num_txt_array++;
+                    }else if(result2!=NULL){
+                        file_list_jpg[0]=file;
+                        num_jpg_array++;
+                    }else{
+                        file_list_pdf[0]=file;
+                        num_pdf_array++;
+                    }
+                }*/
+                pthread_t thread;
+                pthread_create(&thread, NULL, check_file, &file);
+                pthread_join(thread, NULL);
+            }
+        }
+        closedir(dir);
+    } else { // parent process
+        waitpid(pid, NULL, 0);
+    }
+}
+
 void traverse_directory(const char *root_path){
     DIR *dir;
     struct dirent *ent;
