@@ -57,19 +57,6 @@ void create_process(const char *path) {
                     }else{
                         sprintf(file.type, "pdf");
                 }
-                /*if(k==0){
-                    k=1;
-                    if(result1!=NULL){
-                        file_list_txt[0]=file;
-                        num_txt_array++;
-                    }else if(result2!=NULL){
-                        file_list_jpg[0]=file;
-                        num_jpg_array++;
-                    }else{
-                        file_list_pdf[0]=file;
-                        num_pdf_array++;
-                    }
-                }*/
                 pthread_t thread;
                 pthread_create(&thread, NULL, check_file, &file);
                 pthread_join(thread, NULL);
