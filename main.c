@@ -28,14 +28,47 @@ typedef struct {
 sem_t sem; // semaphore for synchronization
 int k=0;
 int t=1;
-int number_of_files=1;
-int num_checked_files = 1;
+int num_txt_array=0;
+int num_jpg_array=0;
+int num_pdf_array=0;
+int number_of_files=0;
+int num_checked_files = 0;
 int num_deleted_files = 0;
-int number_of_txt_files = 0;
-file_info_t file_list[10]; // list of all checked files
+int number_txt = 0;
+int number_jpg = 0;
+int number_pdf = 0;
+file_info_t file_list_txt[10]; // list of all checked files
+file_info_t file_list_jpg[10]; // list of all checked files
+file_info_t file_list_pdf[10]; // list of all checked files
 duplicate_file_t duplicate_list[10]; // list of duplicate files
 
+long long total_size(const char *path)
+{
+    DIR *d;
+    struct dirent *dir;
+    struct stat file_stat;
+    char full_path[1024];
+    long long total = 0;
 
+    d = opendir(path);
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            sprintf(full_path, "%s/%s", path, dir->d_name);
+            if (stat(full_path, &file_stat) == 0) {
+                if (S_ISDIR(file_stat.st_mode)) {
+                    if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+                        continue;
+                    total += total_size(full_path);
+                } else {
+                    total += file_stat.st_size;
+                }
+            }
+        }
+        closedir(d);
+    }
+
+    return total;
+}
 
 int compare_jpg_files(const char* file1_path, const char* file2_path) {
      FILE *fp1 = fopen(file1_path, "rb");
@@ -129,6 +162,7 @@ int arePdfFilesIdentical(const char* file1, const char* file2) {
 
     return areIdentical;
 }
+
 
 
 // Function to check if two files are identical
@@ -235,7 +269,7 @@ void *check_file(void *arg) {
     return NULL;
 }
 
-
+// Function to create a new process for a subfolder
 void create_process(const char *path) {
     pid_t pid = vfork();
     if (pid == 0) { // child process
@@ -253,22 +287,44 @@ void create_process(const char *path) {
                 char *result3=strstr(file.path,"pdf");
                if(result1!=NULL){
                         sprintf(file.type, "txt");
-                    }else if(result2!=NULL){
+
+}else if(result2!=NULL){
                         sprintf(file.type, "jpg");
                     }else{
                         sprintf(file.type, "pdf");
                 }
+                /*if(k==0){
+                    k=1;
+                    if(result1!=NULL){
+                        file_list_txt[0]=file;
+                        num_txt_array++;
+                    }else if(result2!=NULL){
+                        file_list_jpg[0]=file;
+                        num_jpg_array++;
+                    }else{
+                        file_list_pdf[0]=file;
+                        num_pdf_array++;
+                    }
+                }*/
                 pthread_t thread;
                 pthread_create(&thread, NULL, check_file, &file);
                 pthread_join(thread, NULL);
             }
         }
         closedir(dir);
+        // Write log file
+       /* char log_path[256];
+        sprintf(log_path, "%s/%s.log", path, path);
+        FILE *log_fp = fopen(log_path, "w");
+        for (int i = 0; i < num_deleted_files; i++) {
+            fprintf(log_fp, "Deleted file: %s (%s)\n", duplicate_list[i].path, duplicate_list[i].type);
+        }
+        fclose(log_fp);
+        exit(0);*/
     } else { // parent process
         waitpid(pid, NULL, 0);
     }
 }
-
 void traverse_directory(const char *root_path){
     DIR *dir;
     struct dirent *ent;
@@ -283,9 +339,8 @@ void traverse_directory(const char *root_path){
     }
     closedir(dir);
 }
-
 int main() {
-    const char *root_path = "/home/alireza/Desktop/test_project";
+    const char *root_path = "/home/ali/Desktop/";
     long long  total_size1 = total_size(root_path);
     // Initialize semaphore
     sem_init(&sem, 0, 1);
