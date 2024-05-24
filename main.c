@@ -37,6 +37,100 @@ duplicate_file_t duplicate_list[10]; // list of duplicate files
 
 
 
+int compare_jpg_files(const char* file1_path, const char* file2_path) {
+     FILE *fp1 = fopen(file1_path, "rb");
+    FILE *fp2 = fopen(file2_path, "rb");
+
+    if (fp1 == NULL || fp2 == NULL) {
+        printf("Error opening file\n");
+        return 1;
+    }
+
+    char buffer1[1024];
+    char buffer2[1024];
+
+    int same = 1;
+
+    while (1) {
+        size_t bytes_read1 = fread(buffer1, 1, 1024, fp1);
+        size_t bytes_read2 = fread(buffer2, 1, 1024, fp2);
+
+        if (bytes_read1 != bytes_read2) {
+            same = 0;
+            break;
+        }
+
+        if (bytes_read1 == 0) {
+            break;
+        }
+
+        for (int i = 0; i < bytes_read1; i++) {
+            if (buffer1[i] != buffer2[i]) {
+                same = 0;
+                break;
+            }
+        }
+
+        if (!same) {
+            break;
+        }
+    }
+
+    fclose(fp1);
+    fclose(fp2);
+
+    if (same) {
+        return 1;
+    } else {
+        return 0;
+    }
+
+
+}
+
+
+int arePdfFilesIdentical(const char* file1, const char* file2) {
+    FILE* f1 = fopen(file1, "rb");
+    FILE* f2 = fopen(file2, "rb");
+
+    if (!f1 || !f2) {
+        return -1; // file not found
+    }
+
+    fseek(f1, 0, SEEK_END);
+    fseek(f2, 0, SEEK_END);
+
+    long size1 = ftell(f1);
+    long size2 = ftell(f2);
+
+    if (size1 != size2) {
+        return 0; // different file sizes
+    }
+
+    fseek(f1, 0, SEEK_SET);
+    fseek(f2, 0, SEEK_SET);
+
+    char buffer1[size1];
+    char buffer2[size2];
+
+    fread(buffer1, size1, 1, f1);
+    fread(buffer2, size2, 1, f2);
+
+    int areIdentical = 1;
+    for (int i = 0; i < size1; i++) {
+        if (buffer1[i] != buffer2[i]) {
+            areIdentical = 0;
+            break;
+        }
+    }
+
+    fclose(f1);
+    fclose(f2);
+
+    return areIdentical;
+}
+
+
 // Function to check if two files are identical
 int are_files_identical(const char *file1, const char *file2) {
     FILE *fp1 = fopen(file1, "rb");
